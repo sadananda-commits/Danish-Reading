@@ -97,7 +97,16 @@
   th { text-align: left; font-weight: 600; font-size: .88rem; color: var(--muted); padding: 12px 14px; border-bottom: 1px solid var(--line); }
   td { padding: 10px 14px; border-bottom: 1px solid #e6edf2; vertical-align: middle; }
   tr:last-child td { border-bottom: 0; }
-  td.c-no   { width: 56px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  td.c-no   { width: 128px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .serial { display: flex; align-items: center; gap: 4px; }
+  .serial input {
+    font: inherit; color: var(--ink); width: 3.1rem; text-align: center; padding: 5px 4px;
+    border: 1px solid var(--line); border-radius: 8px; background: #fff; -moz-appearance: textfield; appearance: textfield;
+  }
+  .serial input::-webkit-inner-spin-button, .serial input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  .mv { width: 26px; height: 30px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink); cursor: pointer; font-size: .95rem; line-height: 1; padding: 0; }
+  .mv:hover:not([disabled]) { background: #f1f5f8; }
+  .mv[disabled] { opacity: .35; cursor: default; }
   td.c-date { width: 150px; white-space: nowrap; }
   td.c-name { width: 200px; }
   td.c-url  { width: 26%; }
@@ -387,12 +396,13 @@ function renderRow(r) {
 
   if (!r.editing) {
     tr.innerHTML =
-      '<td class="c-no">' + (r.serial ? r.serial : '') + '</td>' +
+      '<td class="c-no"></td>' +
       '<td class="c-date">' + esc(fmtDate(r.date)) + '</td>' +
       '<td class="c-name">' + esc(r.name) + '</td>' +
       '<td class="c-url">' + (isHttp(r.url) ? '<a href="' + esc(r.url) + '" target="_blank" rel="noopener noreferrer">' + esc(shortUrl(r.url)) + '</a>' : esc(r.url)) + '</td>' +
       '<td>' + (r.headline ? esc(r.headline) : '<span class="muted">No headline</span>') + '</td>' +
       '<td class="c-act"></td>';
+    tr.querySelector('.c-no').append(serialControls(r));
     const edit = el('button', { className: 'btn quiet small', type: 'button', textContent: 'Edit' });
     edit.addEventListener('click', () => {
       if (reader && reader.id === r.id) closeReader();
@@ -511,6 +521,44 @@ function renderRow(r) {
   const tdNo = el('td', { className: 'c-no', textContent: r.serial ? String(r.serial) : 'New' });
   tr.append(tdNo, tdDate, tdName, tdUrl, tdHead, tdAct);
   return tr;
+}
+
+/* ---------- Serial number: edit it, or move the row up / down ---------- */
+let moving = false;
+function serialControls(r) {
+  const known = state.rows.filter((x) => x.date === r.date && x.serial);
+  const last = known.length ? Math.max.apply(null, known.map((x) => x.serial)) : 0;
+  const up = el('button', { className: 'mv', type: 'button', textContent: '↑', title: 'Move up', ariaLabel: 'Move up' });
+  const down = el('button', { className: 'mv', type: 'button', textContent: '↓', title: 'Move down', ariaLabel: 'Move down' });
+  const inp = el('input', { type: 'number', min: 1, value: r.serial || '', ariaLabel: 'Serial number' });
+  up.disabled = !r.serial || r.serial <= 1;
+  down.disabled = !r.serial || r.serial >= last;
+  up.addEventListener('click', () => moveRow(r, { dir: -1 }));
+  down.addEventListener('click', () => moveRow(r, { dir: 1 }));
+  inp.addEventListener('change', () => {
+    const v = parseInt(inp.value, 10);
+    if (!v || v < 1 || v === r.serial) { inp.value = r.serial || ''; return; }
+    moveRow(r, { to: v });
+  });
+  inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') inp.blur(); });
+  return el('div', { className: 'serial' }, [up, inp, down]);
+}
+async function moveRow(r, opts) {
+  if (moving) return;
+  if (!apiReady()) { toast('Connect the backend first (API_URL).', true); render(); return; }
+  moving = true;
+  try {
+    const j = await apiPost(Object.assign({ action: 'moveRow', id: r.id }, opts));
+    (j.rows || []).forEach((s) => {
+      const o = state.rows.find((x) => x.id === s.id);
+      if (o) o.serial = s.serial;
+      else state.rows.push(Object.assign({}, s, { editing: false })); // added by someone else meanwhile
+    });
+    render();
+  } catch (e) {
+    toast(e.message, true);
+    render(); // resets the number box
+  } finally { moving = false; }
 }
 
 function shortUrl(u) {
