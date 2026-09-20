@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reading Club – Danish Newspaper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #eaf0f4;
+    --surface: #ffffff;
+    --ink: #14212c;
+    --muted: #5b6b78;
+    --line: #cfd9e1;
+    --red: #c8102e;
+    --red-dark: #a40d26;
+    --focus: #1b6fd1;
+    --ok: #1d7a4d;
+    --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--body); font-size: 16px; line-height: 1.5;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 28px 20px 64px; }
+
+  header.top { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+  h1 { font-family: var(--display); font-weight: 700; font-size: 1.5rem; margin: 0; letter-spacing: -0.01em; }
+  .today { color: var(--muted); font-size: .95rem; }
+
+  /* ---- Today band ---- */
+  .band {
+    margin-top: 20px; background: var(--surface); border-radius: 14px;
+    display: grid; grid-template-columns: 1.1fr 1fr; overflow: hidden;
+    box-shadow: 0 1px 0 var(--line);
+  }
+  .band > section { padding: 28px 30px; }
+  .band > section + section { border-left: 1px solid var(--line); }
+  h2 { font-family: var(--display); font-weight: 500; font-size: 1.05rem; margin: 0 0 14px; color: var(--muted); }
+
+  .clock { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .clock input[type=time] {
+    font-family: var(--display); font-weight: 700; font-size: clamp(3rem, 8vw, 4.6rem);
+    line-height: 1; letter-spacing: -0.03em; color: var(--ink);
+    border: 0; border-bottom: 3px solid var(--line); background: transparent;
+    padding: 0 2px 4px; width: auto; max-width: 100%; border-radius: 0;
+  }
+  .clock input[type=time]:focus { outline: none; border-bottom-color: var(--red); }
+  .clock input[type=time]::-webkit-calendar-picker-indicator { opacity: .35; cursor: pointer; }
+  .join-row { margin-top: 20px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .hint { color: var(--muted); font-size: .88rem; }
+
+  .quiz-daily { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 22px; }
+  .quiz-tag { font-family: var(--display); font-weight: 700; font-size: 2rem; letter-spacing: -0.02em; }
+  .field-label { display: block; font-size: .9rem; font-weight: 600; margin-bottom: 6px; }
+  .inline { display: flex; gap: 8px; flex-wrap: wrap; }
+  .inline input { flex: 1 1 200px; min-width: 0; }
+
+  /* ---- Controls ---- */
+  input[type=text], input[type=url], input[type=date], select {
+    font: inherit; color: var(--ink); background: #fff;
+    border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%;
+  }
+  input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible {
+    outline: 2px solid var(--focus); outline-offset: 2px;
+  }
+  .btn {
+    font: inherit; font-weight: 600; cursor: pointer; border-radius: 8px;
+    border: 1px solid transparent; padding: 9px 16px; text-decoration: none;
+    display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;
+    background: var(--red); color: #fff;
+  }
+  .btn:hover { background: var(--red-dark); }
+  .btn.quiet { background: transparent; color: var(--ink); border-color: var(--line); }
+  .btn.quiet:hover { background: #f1f5f8; }
+  .btn.small { padding: 6px 12px; font-size: .9rem; }
+  .btn[disabled] { opacity: .55; cursor: default; }
+
+  /* ---- Articles ---- */
+  .articles { margin-top: 36px; }
+  .articles-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .articles-head h2 { margin: 0; font-size: 1.3rem; color: var(--ink); }
+  .tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fff; }
+  .seg button { font: inherit; border: 0; background: transparent; padding: 7px 14px; cursor: pointer; color: var(--muted); }
+  .seg button[aria-pressed=true] { background: var(--ink); color: #fff; }
+
+  .table-scroll { overflow-x: auto; background: var(--surface); border-radius: 14px; box-shadow: 0 1px 0 var(--line); }
+  table { border-collapse: collapse; width: 100%; min-width: 900px; }
+  th { text-align: left; font-weight: 600; font-size: .88rem; color: var(--muted); padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  td { padding: 10px 14px; border-bottom: 1px solid #e6edf2; vertical-align: middle; }
+  tr:last-child td { border-bottom: 0; }
+  td.c-date { width: 150px; white-space: nowrap; }
+  td.c-name { width: 200px; }
+  td.c-url  { width: 26%; }
+  td.c-act  { width: 150px; text-align: right; white-space: nowrap; }
+  td.c-url a { color: var(--focus); word-break: break-all; }
+  tr.editing td { background: #f7fafc; }
+  .headline-cell { display: flex; gap: 6px; align-items: center; }
+  .addname { display: flex; gap: 6px; }
+  .muted { color: var(--muted); }
+  .empty { text-align: center; color: var(--muted); padding: 34px 14px; }
+
+  .banner { margin-top: 16px; padding: 12px 16px; border-radius: 10px; background: #fff4d6; border: 1px solid #ecd48a; }
+  .banner code { background: rgba(0,0,0,.06); padding: 1px 5px; border-radius: 4px; }
+
+  #toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px);
+    background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 10px;
+    opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; max-width: 90vw; z-index: 10;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #toast.err { background: var(--red-dark); }
+
+  @media (max-width: 800px) {
+    .band { grid-template-columns: 1fr; }
+    .band > section + section { border-left: 0; border-top: 1px solid var(--line); }
+    .band > section { padding: 22px 20px; }
+  }
+  @media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <h1>Daily Danish Reading Club</h1>
+    <div class="today" id="todayLabel"></div>
+  </header>
+
+  <div class="banner" id="setupBanner" hidden>
+    Backend not connected yet. Deploy <code>Code.gs</code> as a web app and paste its URL into <code>API_URL</code> at the top of this file's script.
+  </div>
+
+  <div class="band">
+    <section aria-labelledby="meetTitle">
+      <h2 id="meetTitle">Morning session</h2>
+      <div class="clock">
+        <input type="time" id="meetingTime" value="06:00" aria-label="Meeting time">
+        <button class="btn quiet" id="saveTime" type="button">Save time</button>
+      </div>
+      <div class="join-row">
+        <a class="btn" id="joinLink" target="_blank" rel="noopener noreferrer">Join meeting</a>
+        <span class="hint" id="timeStatus"></span>
+      </div>
+    </section>
+
+    <section aria-labelledby="quizTitle">
+      <h2 id="quizTitle">Quiz</h2>
+      <div class="quiz-daily">
+        <span class="quiz-tag" id="quizTag">DAY00</span>
+        <a class="btn" id="dailyQuiz" target="_blank" rel="noopener noreferrer">Open today's quiz</a>
+      </div>
+      <label class="field-label" for="specialQuiz">Special quiz link</label>
+      <div class="inline">
+        <input type="url" id="specialQuiz" placeholder="Paste a quiz link (leave blank if none)">
+        <button class="btn quiet" id="saveSpecial" type="button">Save</button>
+      </div>
+      <div class="join-row" id="specialOpenRow" hidden>
+        <a class="btn" id="specialOpen" target="_blank" rel="noopener noreferrer">Open special quiz</a>
+      </div>
+    </section>
+  </div>
+
+  <section class="articles" aria-labelledby="artTitle">
+    <div class="articles-head">
+      <h2 id="artTitle">Articles</h2>
+      <div class="tools">
+        <div class="seg" role="group" aria-label="Show entries">
+          <button type="button" id="fToday" aria-pressed="true">Today</button>
+          <button type="button" id="fAll" aria-pressed="false">All</button>
+        </div>
+        <button class="btn" id="addRow" type="button">Add article</button>
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Date</th><th>Name</th><th>URL</th><th>Headline</th><th></th></tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ================= CONFIG ================= */
+const API_URL      = 'https://script.google.com/macros/s/AKfycbwZkQ4lmTqv2avR41mqTQ6EN37n6qqJwHE3Eu-3zJhG5TmJeGjP_4cmqxgIsfFN7HG0EQ/exec';
+const MEETING_LINK = 'https://teammeet-ashy.vercel.app/meet/daily-danish-reading-club';
+const QUIZ_BASE    = 'https://bhaktivedanta.vercel.app/quiz/DAY';
+const MAX_WORDS    = 20;
+/* ========================================== */
+
+const $ = (s) => document.querySelector(s);
+const pad = (n) => String(n).padStart(2, '0');
+const state = { rows: [], names: [], filter: 'today' };
+
+function todayISO() {
+  const d = new Date();
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+}
+function fmtDate(iso) {
+  const d = new Date(iso + 'T00:00:00');
+  return isNaN(d) ? iso : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function isHttp(u) { return /^https?:\/\/\S+/i.test(u || ''); }
+function clip(text) { return String(text || '').trim().split(/\s+/).filter(Boolean).slice(0, MAX_WORDS).join(' '); }
+function uuid() {
+  return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'id-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+}
+function el(tag, props, children) {
+  const e = document.createElement(tag);
+  Object.assign(e, props || {});
+  (children || []).forEach((c) => e.append(c));
+  return e;
+}
+
+let toastTimer;
+function toast(msg, isErr) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.className = 'show' + (isErr ? ' err' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = ''; }, 3200);
+}
+
+/* ---------- API ---------- */
+const apiReady = () => !API_URL.includes('PASTE_YOUR');
+async function apiGet(params) {
+  const u = new URL(API_URL);
+  Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));
+  const r = await fetch(u.toString());
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error || 'Request failed');
+  return j;
+}
+async function apiPost(body) {
+  const r = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // avoids a CORS preflight
+    body: JSON.stringify(body)
+  });
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error || 'Request failed');
+  return j;
+}
+
+/* ---------- Daily bits ---------- */
+function refreshDaily() {
+  const d = new Date();
+  $('#todayLabel').textContent = d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const tag = 'DAY' + pad(d.getDate());
+  $('#quizTag').textContent = tag;
+  $('#dailyQuiz').href = QUIZ_BASE.replace(/DAY$/, '') + tag;
+}
+setInterval(refreshDaily, 60000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshDaily(); });
+
+/* ---------- Settings ---------- */
+function showSpecial(url) {
+  const row = $('#specialOpenRow');
+  if (isHttp(url)) { $('#specialOpen').href = url; row.hidden = false; }
+  else { row.hidden = true; }
+}
+async function saveSetting(key, value, okMsg, btn) {
+  if (!apiReady()) { toast('Connect the backend first (API_URL).', true); return false; }
+  btn.disabled = true;
+  try { await apiPost({ action: 'saveSetting', key, value }); toast(okMsg); return true; }
+  catch (e) { toast(e.message, true); return false; }
+  finally { btn.disabled = false; }
+}
+$('#saveTime').addEventListener('click', async (ev) => {
+  const v = $('#meetingTime').value;
+  if (!v) { toast('Choose a time first.', true); return; }
+  if (await saveSetting('meetingTime', v, 'Meeting time saved', ev.currentTarget)) {
+    $('#timeStatus').textContent = 'Saved for the club';
+  }
+});
+$('#meetingTime').addEventListener('input', () => { $('#timeStatus').textContent = ''; });
+$('#saveSpecial').addEventListener('click', async (ev) => {
+  const v = $('#specialQuiz').value.trim();
+  if (v && !isHttp(v)) { toast('Quiz link must start with http:// or https://', true); return; }
+  if (await saveSetting('specialQuiz', v, v ? 'Special quiz saved' : 'Special quiz cleared', ev.currentTarget)) showSpecial(v);
+});
+
+/* ---------- Names ---------- */
+function fillSelect(sel, current) {
+  sel.innerHTML = '';
+  sel.append(el('option', { value: '', textContent: 'Select name' }));
+  const list = state.names.slice();
+  if (current && !list.some((n) => n.toLowerCase() === current.toLowerCase())) list.push(current);
+  list.forEach((n) => sel.append(el('option', { value: n, textContent: n })));
+  sel.append(el('option', { value: '__new__', textContent: '+ Add new name' }));
+  sel.value = current || '';
+}
+function refreshAllSelects() {
+  document.querySelectorAll('select.name').forEach((s) => fillSelect(s, s.value === '__new__' ? '' : s.value));
+}
+function registerName(name) {
+  const existing = state.names.find((n) => n.toLowerCase() === name.toLowerCase());
+  if (existing) return existing;
+  state.names.push(name);
+  state.names.sort((a, b) => a.localeCompare(b));
+  if (apiReady()) apiPost({ action: 'addName', name }).catch((e) => toast(e.message, true));
+  return name;
+}
+
+/* ---------- Rows ---------- */
+function renderRow(r) {
+  const tr = el('tr');
+  tr.dataset.id = r.id;
+
+  if (!r.editing) {
+    tr.innerHTML =
+      '<td class="c-date">' + esc(fmtDate(r.date)) + '</td>' +
+      '<td class="c-name">' + esc(r.name) + '</td>' +
+      '<td class="c-url">' + (isHttp(r.url) ? '<a href="' + esc(r.url) + '" target="_blank" rel="noopener noreferrer">' + esc(shortUrl(r.url)) + '</a>' : esc(r.url)) + '</td>' +
+      '<td>' + (r.headline ? esc(r.headline) : '<span class="muted">No headline</span>') + '</td>' +
+      '<td class="c-act"></td>';
+    const edit = el('button', { className: 'btn quiet small', type: 'button', textContent: 'Edit' });
+    edit.addEventListener('click', () => {
+      r.backup = { date: r.date, name: r.name, url: r.url, headline: r.headline };
+      r.editing = true;
+      tr.replaceWith(renderRow(r));
+    });
+    tr.querySelector('.c-act').append(edit);
+    return tr;
+  }
+
+  tr.className = 'editing';
+
+  // Date
+  const dateIn = el('input', { type: 'date', value: r.date, ariaLabel: 'Date' });
+  dateIn.addEventListener('input', () => { r.date = dateIn.value; });
+  const tdDate = el('td', { className: 'c-date' }, [dateIn]);
+
+  // Name
+  const tdName = el('td', { className: 'c-name' });
+  const sel = el('select', { className: 'name', ariaLabel: 'Name' });
+  fillSelect(sel, r.name);
+  tdName.append(sel);
+  sel.addEventListener('change', () => {
+    if (sel.value !== '__new__') { r.name = sel.value; return; }
+    const inp = el('input', { type: 'text', placeholder: 'New name', ariaLabel: 'New name' });
+    const ok = el('button', { className: 'btn small', type: 'button', textContent: 'Add' });
+    const no = el('button', { className: 'btn quiet small', type: 'button', textContent: '×', ariaLabel: 'Cancel' });
+    const box = el('div', { className: 'addname' }, [inp, ok, no]);
+    const restore = (name) => {
+      tdName.replaceChildren(sel);
+      refreshAllSelects();
+      sel.value = name || '';
+      r.name = sel.value;
+    };
+    ok.addEventListener('click', () => {
+      const n = inp.value.trim();
+      restore(n ? registerName(n) : r.name);
+      if (n) sel.value = state.names.find((x) => x.toLowerCase() === n.toLowerCase()) || n;
+      r.name = sel.value;
+    });
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') ok.click(); if (e.key === 'Escape') no.click(); });
+    no.addEventListener('click', () => restore(r.name));
+    tdName.replaceChildren(box);
+    inp.focus();
+  });
+
+  // URL
+  const urlIn = el('input', { type: 'url', value: r.url, placeholder: 'https://…', ariaLabel: 'Article URL' });
+  const tdUrl = el('td', { className: 'c-url' }, [urlIn]);
+
+  // Headline
+  const headIn = el('input', { type: 'text', value: r.headline, placeholder: 'Headline appears here', ariaLabel: 'Headline' });
+  const refresh = el('button', { className: 'btn quiet small', type: 'button', textContent: 'Read', title: 'Read headline from the URL' });
+  const tdHead = el('td', {}, [el('div', { className: 'headline-cell' }, [headIn, refresh])]);
+  headIn.addEventListener('input', () => { r.headline = headIn.value; });
+
+  async function readHeadline() {
+    const url = urlIn.value.trim();
+    if (!isHttp(url)) return;
+    if (!apiReady()) { toast('Connect the backend to read headlines automatically.', true); return; }
+    headIn.placeholder = 'Reading page…';
+    refresh.disabled = true;
+    try {
+      const j = await apiGet({ action: 'headline', url });
+      if (urlIn.value.trim() !== url) return; // URL changed meanwhile
+      const h = clip(j.headline);
+      if (h) { headIn.value = h; r.headline = h; }
+      else { toast("Couldn't read a headline from that page. You can type one.", true); }
+    } catch (e) { toast(e.message, true); }
+    finally { headIn.placeholder = 'Headline appears here'; refresh.disabled = false; }
+  }
+  let timer;
+  urlIn.addEventListener('input', () => {
+    r.url = urlIn.value.trim();
+    clearTimeout(timer);
+    timer = setTimeout(readHeadline, 700);
+  });
+  refresh.addEventListener('click', readHeadline);
+
+  // Actions
+  const save = el('button', { className: 'btn small', type: 'button', textContent: 'Save' });
+  const cancel = el('button', { className: 'btn quiet small', type: 'button', textContent: 'Cancel' });
+  const tdAct = el('td', { className: 'c-act' }, [cancel, ' ', save]);
+
+  cancel.addEventListener('click', () => {
+    if (r.isNew) { state.rows = state.rows.filter((x) => x !== r); tr.remove(); updateEmpty(); return; }
+    Object.assign(r, r.backup, { editing: false });
+    tr.replaceWith(renderRow(r));
+  });
+
+  save.addEventListener('click', async () => {
+    r.date = dateIn.value; r.url = urlIn.value.trim(); r.headline = clip(headIn.value);
+    r.name = sel.value === '__new__' ? '' : sel.value;
+    if (!r.date) return toast('Pick a date.', true);
+    if (!r.name) return toast('Select or add a name.', true);
+    if (!isHttp(r.url)) return toast('Enter a URL starting with http:// or https://', true);
+    if (!apiReady()) return toast('Connect the backend first (API_URL).', true);
+    save.disabled = true; save.textContent = 'Saving…';
+    try {
+      await apiPost({ action: 'saveRow', row: { id: r.id, date: r.date, name: r.name, url: r.url, headline: r.headline } });
+      r.editing = false; r.isNew = false; delete r.backup;
+      tr.replaceWith(renderRow(r));
+      toast('Saved');
+    } catch (e) {
+      toast(e.message, true);
+      save.disabled = false; save.textContent = 'Save';
+    }
+  });
+
+  tr.append(tdDate, tdName, tdUrl, tdHead, tdAct);
+  return tr;
+}
+
+function shortUrl(u) {
+  try { const x = new URL(u); return x.hostname.replace(/^www\./, '') + (x.pathname.length > 1 ? x.pathname : ''); }
+  catch (e) { return u; }
+}
+
+function render() {
+  const tbody = $('#rows');
+  tbody.innerHTML = '';
+  const today = todayISO();
+  state.rows
+    .filter((r) => r.editing || state.filter === 'all' || r.date === today)
+    .forEach((r) => tbody.append(renderRow(r)));
+  updateEmpty();
+}
+function updateEmpty() {
+  const tbody = $('#rows');
+  const old = tbody.querySelector('.empty-row');
+  if (old) old.remove();
+  if (!tbody.children.length) {
+    const msg = state.filter === 'today' ? 'No articles for today yet. Use Add article to log the first one.' : 'No articles yet.';
+    tbody.innerHTML = '<tr class="empty-row"><td class="empty" colspan="5">' + msg + '</td></tr>';
+  }
+}
+
+$('#addRow').addEventListener('click', () => {
+  const r = { id: uuid(), date: todayISO(), name: '', url: '', headline: '', editing: true, isNew: true };
+  state.rows.unshift(r);
+  const tbody = $('#rows');
+  const empty = tbody.querySelector('.empty-row');
+  if (empty) empty.remove();
+  const tr = renderRow(r);
+  tbody.prepend(tr);
+  const first = tr.querySelector('select'); if (first) first.focus();
+});
+function setFilter(f) {
+  state.filter = f;
+  $('#fToday').setAttribute('aria-pressed', f === 'today');
+  $('#fAll').setAttribute('aria-pressed', f === 'all');
+  render();
+}
+$('#fToday').addEventListener('click', () => setFilter('today'));
+$('#fAll').addEventListener('click', () => setFilter('all'));
+
+/* ---------- Boot ---------- */
+async function boot() {
+  $('#joinLink').href = MEETING_LINK;
+  refreshDaily();
+  render();
+  if (!apiReady()) { $('#setupBanner').hidden = false; return; }
+  $('#rows').innerHTML = '<tr class="empty-row"><td class="empty" colspan="5">Loading…</td></tr>';
+  try {
+    const j = await apiGet({ action: 'init' });
+    state.names = j.names || [];
+    state.rows = (j.rows || []).map((r) => Object.assign({}, r, { editing: false }))
+      .map((r, i) => Object.assign(r, { _i: i }))
+      .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b._i - a._i));
+    $('#meetingTime').value = (j.settings && j.settings.meetingTime) || '06:00';
+    const sq = (j.settings && j.settings.specialQuiz) || '';
+    $('#specialQuiz').value = sq;
+    showSpecial(sq);
+    render();
+  } catch (e) {
+    $('#rows').innerHTML = '';
+    updateEmpty();
+    toast('Could not load data: ' + e.message, true);
+  }
+}
+boot();
+</script>
+</body>
+</html>
