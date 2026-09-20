@@ -98,7 +98,7 @@
   td.c-date { width: 150px; white-space: nowrap; }
   td.c-name { width: 200px; }
   td.c-url  { width: 26%; }
-  td.c-act  { width: 150px; text-align: right; white-space: nowrap; }
+  td.c-act  { width: 190px; text-align: right; white-space: nowrap; }
   td.c-url a { color: var(--focus); word-break: break-all; }
   tr.editing td { background: #f7fafc; }
   .headline-cell { display: flex; gap: 6px; align-items: center; }
@@ -116,6 +116,41 @@
   }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   #toast.err { background: var(--red-dark); }
+
+  .clock input[type=date] {
+    font-family: var(--display); font-weight: 500; font-size: 1.25rem; width: auto;
+    border: 0; border-bottom: 3px solid var(--line); border-radius: 0; background: transparent; padding: 4px 2px;
+  }
+  .clock input[type=date]:focus { outline: none; border-bottom-color: var(--red); }
+  .when { margin: 12px 0 0; color: var(--muted); }
+
+  /* ---- Reading pane ---- */
+  .reader-row td { background: #f3f7fa; padding: 0; border-bottom: 1px solid var(--line); }
+  .reader { position: sticky; left: 14px; width: min(820px, calc(100vw - 68px)); margin: 0 auto; padding: 26px 8px 30px; }
+  .reader-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 6px; }
+  .reader-head h3 { font-family: var(--display); font-size: 1.5rem; line-height: 1.2; margin: 0; letter-spacing: -0.01em; }
+  .reader-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .reader-hint { color: var(--muted); font-size: .9rem; margin: 0 0 18px; }
+  .reader-body { background: #fff; border-radius: 12px; padding: 26px 30px; font-size: 1.125rem; line-height: 1.75; max-width: 100%; }
+  .reader-body p { margin: 0 0 1em; }
+  .reader-body h4 { font-family: var(--display); font-size: 1.15rem; margin: 1.4em 0 .5em; }
+  .reader-body::selection, .reader-body *::selection { background: #ffe28a; }
+
+  /* ---- Word / sentence popup ---- */
+  #selPop {
+    position: fixed; z-index: 30; width: min(340px, calc(100vw - 16px));
+    background: var(--ink); color: #fff; border-radius: 12px; padding: 8px;
+    box-shadow: 0 8px 28px rgba(20, 33, 44, .28);
+  }
+  .pop-bar { display: flex; gap: 6px; align-items: center; }
+  #selPop .btn.quiet { color: #fff; border-color: rgba(255, 255, 255, .35); }
+  #selPop .btn.quiet:hover { background: rgba(255, 255, 255, .12); }
+  .pop-x { margin-left: auto; background: transparent; border: 0; color: #fff; font-size: 1.3rem; cursor: pointer; padding: 2px 8px; line-height: 1; }
+  .pop-result { margin-top: 10px; padding: 10px 4px 4px; border-top: 1px solid rgba(255, 255, 255, .2); }
+  .pop-src { font-size: .85rem; opacity: .75; margin-bottom: 4px; }
+  .pop-out { font-family: var(--display); font-size: 1.15rem; line-height: 1.35; }
+  .pop-out.err { color: #ffb4bd; }
+  .pop-result a { color: #9cc9ff; font-size: .88rem; display: inline-block; margin-top: 8px; }
 
   @media (max-width: 800px) {
     .band { grid-template-columns: 1fr; }
@@ -139,13 +174,15 @@
 
   <div class="band">
     <section aria-labelledby="meetTitle">
-      <h2 id="meetTitle">Next Morning session</h2>
+      <h2 id="meetTitle">Next morning session</h2>
       <div class="clock">
         <input type="time" id="meetingTime" value="06:00" aria-label="Meeting time">
-        <button class="btn quiet" id="saveTime" type="button">Save time</button>
+        <input type="date" id="meetingDate" aria-label="Meeting date">
       </div>
+      <p class="when" id="whenLine"></p>
       <div class="join-row">
         <a class="btn" id="joinLink" target="_blank" rel="noopener noreferrer">Join meeting</a>
+        <button class="btn quiet" id="saveTime" type="button">Save date &amp; time</button>
         <span class="hint" id="timeStatus"></span>
       </div>
     </section>
@@ -188,11 +225,23 @@
     </div>
   </section>
 </div>
+<div id="selPop" hidden role="dialog" aria-label="Word tools">
+  <div class="pop-bar">
+    <button type="button" class="btn small" id="popMeaning">Meaning</button>
+    <button type="button" class="btn quiet small" id="popListen">Listen in Danish</button>
+    <button type="button" class="pop-x" id="popClose" aria-label="Close">×</button>
+  </div>
+  <div class="pop-result" id="popResult" hidden>
+    <div class="pop-src" id="popSrc"></div>
+    <div class="pop-out" id="popOut"></div>
+    <a id="popDict" target="_blank" rel="noopener noreferrer" hidden>More in Den Danske Ordbog</a>
+  </div>
+</div>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
 /* ================= CONFIG ================= */
-const API_URL      = 'https://script.google.com/macros/s/AKfycbwZkQ4lmTqv2avR41mqTQ6EN37n6qqJwHE3Eu-3zJhG5TmJeGjP_4cmqxgIsfFN7HG0EQ/exec';
+const API_URL      = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
 const MEETING_LINK = 'https://teammeet-ashy.vercel.app/meet/daily-danish-reading-club';
 const QUIZ_BASE    = 'https://bhaktivedanta.vercel.app/quiz/DAY';
 const MAX_WORDS    = 20;
@@ -280,13 +329,21 @@ async function saveSetting(key, value, okMsg, btn) {
   finally { btn.disabled = false; }
 }
 $('#saveTime').addEventListener('click', async (ev) => {
-  const v = $('#meetingTime').value;
-  if (!v) { toast('Choose a time first.', true); return; }
-  if (await saveSetting('meetingTime', v, 'Meeting time saved', ev.currentTarget)) {
+  const t = $('#meetingTime').value, d = $('#meetingDate').value;
+  if (!t || !d) { toast('Choose both a date and a time.', true); return; }
+  if (!apiReady()) { toast('Connect the backend first (API_URL).', true); return; }
+  const btn = ev.currentTarget;
+  btn.disabled = true;
+  try {
+    await apiPost({ action: 'saveSetting', key: 'meetingTime', value: t });
+    await apiPost({ action: 'saveSetting', key: 'meetingDate', value: d });
     $('#timeStatus').textContent = 'Saved for the club';
-  }
+    toast('Meeting date and time saved');
+  } catch (e) { toast(e.message, true); }
+  finally { btn.disabled = false; }
 });
-$('#meetingTime').addEventListener('input', () => { $('#timeStatus').textContent = ''; });
+['#meetingTime', '#meetingDate'].forEach((s) =>
+  $(s).addEventListener('input', () => { $('#timeStatus').textContent = ''; updateWhen(); }));
 $('#saveSpecial').addEventListener('click', async (ev) => {
   const v = $('#specialQuiz').value.trim();
   if (v && !isHttp(v)) { toast('Quiz link must start with http:// or https://', true); return; }
@@ -329,11 +386,14 @@ function renderRow(r) {
       '<td class="c-act"></td>';
     const edit = el('button', { className: 'btn quiet small', type: 'button', textContent: 'Edit' });
     edit.addEventListener('click', () => {
+      if (reader && reader.id === r.id) closeReader();
       r.backup = { date: r.date, name: r.name, url: r.url, headline: r.headline };
       r.editing = true;
       tr.replaceWith(renderRow(r));
     });
-    tr.querySelector('.c-act').append(edit);
+    const start = el('button', { className: 'btn small', type: 'button', textContent: 'Start' });
+    start.addEventListener('click', () => openReader(r, tr, start));
+    tr.querySelector('.c-act').append(edit, ' ', start);
     return tr;
   }
 
@@ -446,6 +506,7 @@ function shortUrl(u) {
 }
 
 function render() {
+  closeReader();
   const tbody = $('#rows');
   tbody.innerHTML = '';
   const today = todayISO();
@@ -483,10 +544,204 @@ function setFilter(f) {
 $('#fToday').addEventListener('click', () => setFilter('today'));
 $('#fAll').addEventListener('click', () => setFilter('all'));
 
+/* ---------- Next session date ---------- */
+function isoOf(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+function updateWhen() {
+  const d = $('#meetingDate').value, t = $('#meetingTime').value;
+  const dt = (d && t) ? new Date(d + 'T' + t) : null;
+  $('#whenLine').textContent = (dt && !isNaN(dt))
+    ? dt.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }) + ' at ' + t
+    : '';
+}
+// Shows the saved date, or the next occurrence of the time if the saved one has passed.
+function applyMeeting(time, date) {
+  time = time || '06:00';
+  const now = new Date();
+  let when = date ? new Date(date + 'T' + time) : null;
+  if (!when || isNaN(when) || when < now) {
+    when = new Date(now);
+    const hm = time.split(':').map(Number);
+    when.setHours(hm[0], hm[1], 0, 0);
+    if (when <= now) when.setDate(when.getDate() + 1);
+  }
+  $('#meetingTime').value = time;
+  $('#meetingDate').value = isoOf(when);
+  updateWhen();
+}
+
+/* ---------- Reading pane ---------- */
+let reader = null; // { id, panelTr, btn }
+const articleCache = new Map();
+
+function closeReader() {
+  if (!reader) return;
+  reader.panelTr.remove();
+  if (reader.btn) reader.btn.textContent = 'Start';
+  reader = null;
+  hidePop();
+  stopSpeech();
+}
+
+async function openReader(r, tr, btn) {
+  if (reader && reader.id === r.id) { closeReader(); return; }
+  closeReader();
+
+  const title = el('h3', { textContent: r.headline || shortUrl(r.url) });
+  const orig = el('a', { className: 'btn quiet small', href: r.url, target: '_blank', rel: 'noopener noreferrer', textContent: 'Open original' });
+  const close = el('button', { className: 'btn quiet small', type: 'button', textContent: 'Close' });
+  const head = el('div', { className: 'reader-head' }, [title, el('div', { className: 'reader-actions' }, [orig, close])]);
+  const hint = el('p', { className: 'reader-hint', textContent: 'Double-click a word or drag across a sentence to see its meaning or hear it in Danish.' });
+  const body = el('div', { className: 'reader-body', lang: 'da', textContent: 'Loading article…' });
+  const panelTr = el('tr', { className: 'reader-row' }, [el('td', { colSpan: 5 }, [el('div', { className: 'reader' }, [head, hint, body])])]);
+
+  tr.after(panelTr);
+  btn.textContent = 'Hide';
+  reader = { id: r.id, panelTr, btn };
+  close.addEventListener('click', closeReader);
+  panelTr.scrollIntoView({ block: 'nearest' });
+
+  if (!apiReady()) { body.textContent = 'Connect the backend first (API_URL) to load articles.'; return; }
+  try {
+    let a = articleCache.get(r.url);
+    if (!a) { a = await apiGet({ action: 'article', url: r.url }); articleCache.set(r.url, a); }
+    if (!reader || reader.id !== r.id) return; // closed while loading
+    if (a.title) title.textContent = a.title;
+    body.textContent = '';
+    if (!a.blocks || !a.blocks.length) {
+      body.textContent = "Couldn't pull the text out of this page (it may be behind a paywall). Use Open original to read it on the site.";
+      return;
+    }
+    a.blocks.forEach((b) => body.append(el(b.tag === 'p' ? 'p' : 'h4', { textContent: b.text })));
+  } catch (e) {
+    if (reader && reader.id === r.id) body.textContent = 'Could not load the article: ' + e.message;
+  }
+}
+
+/* ---------- Selection popup: meaning + Danish speech ---------- */
+const pop = $('#selPop');
+let popText = '', pinned = false, mouseDown = false, selTimer, lastRect = null;
+const meaningCache = new Map();
+
+function hidePop() { pop.hidden = true; pinned = false; popText = ''; $('#popResult').hidden = true; }
+
+function readSelection() {
+  const s = window.getSelection();
+  if (!s || s.isCollapsed || !s.rangeCount) return null;
+  const text = s.toString().replace(/\s+/g, ' ').trim();
+  if (!text || text.length > 1000) return null;
+  const range = s.getRangeAt(0);
+  const n = range.commonAncestorContainer;
+  const host = n.nodeType === 1 ? n : n.parentElement;
+  if (!host || !host.closest('.reader-body')) return null;
+  return { text, range };
+}
+function placePop() {
+  if (!lastRect) return;
+  const w = pop.offsetWidth, h = pop.offsetHeight;
+  const coarse = window.matchMedia('(pointer: coarse)').matches;
+  const left = Math.min(Math.max(8, lastRect.left + lastRect.width / 2 - w / 2), window.innerWidth - w - 8);
+  const top = Math.max(8, Math.min(lastRect.bottom + (coarse ? 34 : 8), window.innerHeight - h - 8));
+  pop.style.left = left + 'px';
+  pop.style.top = top + 'px';
+}
+function checkSelection() {
+  const s = readSelection();
+  if (!s) { if (!pinned) hidePop(); return; }
+  if (!pop.hidden && s.text === popText) return;
+  popText = s.text; pinned = false;
+  $('#popResult').hidden = true;
+  lastRect = s.range.getBoundingClientRect();
+  pop.hidden = false;
+  placePop();
+}
+
+document.addEventListener('mousedown', () => { mouseDown = true; });
+document.addEventListener('mouseup', (e) => {
+  mouseDown = false;
+  if (pop.contains(e.target)) return;
+  setTimeout(checkSelection, 0);
+});
+document.addEventListener('selectionchange', () => {
+  clearTimeout(selTimer);
+  selTimer = setTimeout(() => { if (!mouseDown) checkSelection(); }, 350);
+});
+document.addEventListener('pointerdown', (e) => { if (!pop.hidden && !pop.contains(e.target)) hidePop(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hidePop(); });
+window.addEventListener('scroll', () => { if (!pinned && !pop.hidden) hidePop(); }, { passive: true, capture: true });
+pop.addEventListener('mousedown', (e) => e.preventDefault()); // keep the text selected
+$('#popClose').addEventListener('click', hidePop);
+
+function showResult(src, out, isErr, dictWord) {
+  $('#popResult').hidden = false;
+  $('#popSrc').textContent = src;
+  const o = $('#popOut');
+  o.textContent = out;
+  o.className = 'pop-out' + (isErr ? ' err' : '');
+  const a = $('#popDict');
+  if (dictWord) { a.href = 'https://ordnet.dk/ddo/ordbog?query=' + encodeURIComponent(dictWord); a.hidden = false; }
+  else { a.hidden = true; }
+  placePop();
+}
+
+$('#popMeaning').addEventListener('click', async () => {
+  const text = popText;
+  if (!text) return;
+  pinned = true;
+  const single = !/\s/.test(text);
+  showResult('“' + text + '”  Danish → English', 'Translating…', false, single ? text.toLowerCase() : '');
+  if (!apiReady()) { showResult('“' + text + '”', 'Connect the backend first (API_URL).', true, ''); return; }
+  try {
+    let t = meaningCache.get(text);
+    if (!t) { const j = await apiPost({ action: 'translate', text }); t = j.translation; meaningCache.set(text, t); }
+    if (text !== popText) return; // selection changed meanwhile
+    showResult('“' + text + '”  Danish → English', t, false, single ? text.toLowerCase() : '');
+  } catch (e) {
+    if (text === popText) showResult('“' + text + '”', e.message, true, '');
+  }
+});
+$('#popListen').addEventListener('click', (ev) => {
+  if (!popText) return;
+  pinned = true;
+  speak(popText, ev.currentTarget);
+});
+
+/* Danish speech: device voice first, server audio as fallback */
+let currentAudio = null;
+if ('speechSynthesis' in window) speechSynthesis.getVoices(); // starts loading the voice list
+function danishVoice() {
+  if (!('speechSynthesis' in window)) return null;
+  return speechSynthesis.getVoices().find((v) => /^da([-_]|$)/i.test(v.lang)) || null;
+}
+function stopSpeech() {
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+}
+async function speak(text, btn) {
+  stopSpeech();
+  const voice = danishVoice();
+  if (voice) {
+    const u = new SpeechSynthesisUtterance(text);
+    u.voice = voice; u.lang = voice.lang || 'da-DK'; u.rate = 0.9;
+    speechSynthesis.speak(u);
+    return;
+  }
+  if (!apiReady()) { toast('No Danish voice on this device, and the backend is not connected.', true); return; }
+  btn.disabled = true;
+  try {
+    const j = await apiPost({ action: 'tts', text: text.slice(0, 200) });
+    currentAudio = new Audio(j.audio);
+    await currentAudio.play();
+    if (text.length > 200) toast('Only the first 200 characters were read aloud.');
+  } catch (e) {
+    toast(e.message || 'Could not play the audio.', true);
+  } finally { btn.disabled = false; }
+}
+
 /* ---------- Boot ---------- */
 async function boot() {
   $('#joinLink').href = MEETING_LINK;
   refreshDaily();
+  applyMeeting('06:00', '');
   render();
   if (!apiReady()) { $('#setupBanner').hidden = false; return; }
   $('#rows').innerHTML = '<tr class="empty-row"><td class="empty" colspan="5">Loading…</td></tr>';
@@ -496,7 +751,7 @@ async function boot() {
     state.rows = (j.rows || []).map((r) => Object.assign({}, r, { editing: false }))
       .map((r, i) => Object.assign(r, { _i: i }))
       .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b._i - a._i));
-    $('#meetingTime').value = (j.settings && j.settings.meetingTime) || '06:00';
+    applyMeeting((j.settings && j.settings.meetingTime) || '06:00', (j.settings && j.settings.meetingDate) || '');
     const sq = (j.settings && j.settings.specialQuiz) || '';
     $('#specialQuiz').value = sq;
     showSpecial(sq);
