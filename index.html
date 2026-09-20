@@ -89,12 +89,15 @@
   .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fff; }
   .seg button { font: inherit; border: 0; background: transparent; padding: 7px 14px; cursor: pointer; color: var(--muted); }
   .seg button[aria-pressed=true] { background: var(--ink); color: #fff; }
+  .tools label { color: var(--muted); font-size: .9rem; }
+  .tools input[type=date] { width: auto; padding: 6px 10px; }
 
   .table-scroll { overflow-x: auto; background: var(--surface); border-radius: 14px; box-shadow: 0 1px 0 var(--line); }
-  table { border-collapse: collapse; width: 100%; min-width: 900px; }
+  table { border-collapse: collapse; width: 100%; min-width: 960px; }
   th { text-align: left; font-weight: 600; font-size: .88rem; color: var(--muted); padding: 12px 14px; border-bottom: 1px solid var(--line); }
   td { padding: 10px 14px; border-bottom: 1px solid #e6edf2; vertical-align: middle; }
   tr:last-child td { border-bottom: 0; }
+  td.c-no   { width: 56px; color: var(--muted); font-variant-numeric: tabular-nums; }
   td.c-date { width: 150px; white-space: nowrap; }
   td.c-name { width: 200px; }
   td.c-url  { width: 26%; }
@@ -212,13 +215,15 @@
           <button type="button" id="fToday" aria-pressed="true">Today</button>
           <button type="button" id="fAll" aria-pressed="false">All</button>
         </div>
+        <label for="fromDate">From</label>
+        <input type="date" id="fromDate" title="Show articles from this date onwards">
         <button class="btn" id="addRow" type="button">Add article</button>
       </div>
     </div>
     <div class="table-scroll">
       <table>
         <thead>
-          <tr><th>Date</th><th>Name</th><th>URL</th><th>Headline</th><th></th></tr>
+          <tr><th>No.</th><th>Date</th><th>Name</th><th>URL</th><th>Headline</th><th></th></tr>
         </thead>
         <tbody id="rows"></tbody>
       </table>
@@ -249,7 +254,7 @@ const MAX_WORDS    = 20;
 
 const $ = (s) => document.querySelector(s);
 const pad = (n) => String(n).padStart(2, '0');
-const state = { rows: [], names: [], filter: 'today' };
+const state = { rows: [], names: [], from: null }; // from: null = today, '' = all dates, 'YYYY-MM-DD' = that date onwards
 
 function todayISO() {
   const d = new Date();
@@ -305,7 +310,10 @@ async function apiPost(body) {
 }
 
 /* ---------- Daily bits ---------- */
+let lastDay = todayISO();
 function refreshDaily() {
+  const t = todayISO();
+  if (t !== lastDay) { lastDay = t; if (state.from === null) { syncFilterUI(); render(); } } // new day while the page is open
   const d = new Date();
   $('#todayLabel').textContent = d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const tag = 'DAY' + pad(d.getDate());
@@ -379,6 +387,7 @@ function renderRow(r) {
 
   if (!r.editing) {
     tr.innerHTML =
+      '<td class="c-no">' + (r.serial ? r.serial : '') + '</td>' +
       '<td class="c-date">' + esc(fmtDate(r.date)) + '</td>' +
       '<td class="c-name">' + esc(r.name) + '</td>' +
       '<td class="c-url">' + (isHttp(r.url) ? '<a href="' + esc(r.url) + '" target="_blank" rel="noopener noreferrer">' + esc(shortUrl(r.url)) + '</a>' : esc(r.url)) + '</td>' +
@@ -393,6 +402,7 @@ function renderRow(r) {
     });
     const start = el('button', { className: 'btn small', type: 'button', textContent: 'Start' });
     start.addEventListener('click', () => openReader(r, tr, start));
+    if (reader && reader.id === r.id) { start.textContent = 'Hide'; reader.btn = start; }
     tr.querySelector('.c-act').append(edit, ' ', start);
     return tr;
   }
@@ -486,9 +496,11 @@ function renderRow(r) {
     if (!apiReady()) return toast('Connect the backend first (API_URL).', true);
     save.disabled = true; save.textContent = 'Saving…';
     try {
-      await apiPost({ action: 'saveRow', row: { id: r.id, date: r.date, name: r.name, url: r.url, headline: r.headline } });
-      r.editing = false; r.isNew = false; delete r.backup;
-      tr.replaceWith(renderRow(r));
+      const j = await apiPost({ action: 'saveRow', row: { id: r.id, date: r.date, name: r.name, url: r.url, headline: r.headline } });
+      r.serial = j.serial;
+      (j.changed || []).forEach((c) => { const o = state.rows.find((x) => x.id === c.id); if (o) o.serial = c.serial; });
+      r.editing = false; r.isNew = false; r.pinned = true; delete r.backup;
+      render(); // re-sort so the row sits at its serial number
       toast('Saved');
     } catch (e) {
       toast(e.message, true);
@@ -496,7 +508,8 @@ function renderRow(r) {
     }
   });
 
-  tr.append(tdDate, tdName, tdUrl, tdHead, tdAct);
+  const tdNo = el('td', { className: 'c-no', textContent: r.serial ? String(r.serial) : 'New' });
+  tr.append(tdNo, tdDate, tdName, tdUrl, tdHead, tdAct);
   return tr;
 }
 
@@ -506,13 +519,21 @@ function shortUrl(u) {
 }
 
 function render() {
-  closeReader();
+  const keep = reader;                       // keep an open reading pane across re-renders
+  if (keep) keep.panelTr.remove();
   const tbody = $('#rows');
   tbody.innerHTML = '';
-  const today = todayISO();
+  const from = state.from === null ? todayISO() : state.from;
+  // Oldest date first, then by serial number. Unsaved rows have no serial yet, so they go last in their day.
+  state.rows.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : (a.serial || 1e9) - (b.serial || 1e9)));
   state.rows
-    .filter((r) => r.editing || state.filter === 'all' || r.date === today)
+    .filter((r) => r.editing || r.pinned || !from || r.date >= from)
     .forEach((r) => tbody.append(renderRow(r)));
+  if (keep) {
+    const t = tbody.querySelector('tr[data-id="' + keep.id + '"]');
+    if (t) t.after(keep.panelTr);
+    else { reader = null; hidePop(); stopSpeech(); }
+  }
   updateEmpty();
 }
 function updateEmpty() {
@@ -520,29 +541,35 @@ function updateEmpty() {
   const old = tbody.querySelector('.empty-row');
   if (old) old.remove();
   if (!tbody.children.length) {
-    const msg = state.filter === 'today' ? 'No articles for today yet. Use Add article to log the first one.' : 'No articles yet.';
-    tbody.innerHTML = '<tr class="empty-row"><td class="empty" colspan="5">' + msg + '</td></tr>';
+    const msg = state.from === '' ? 'No articles yet.' : 'No articles from this date onwards. Use Add article to log the first one.';
+    tbody.innerHTML = '<tr class="empty-row"><td class="empty" colspan="6">' + msg + '</td></tr>';
   }
 }
 
 $('#addRow').addEventListener('click', () => {
   const r = { id: uuid(), date: todayISO(), name: '', url: '', headline: '', editing: true, isNew: true };
-  state.rows.unshift(r);
-  const tbody = $('#rows');
-  const empty = tbody.querySelector('.empty-row');
-  if (empty) empty.remove();
-  const tr = renderRow(r);
-  tbody.prepend(tr);
-  const first = tr.querySelector('select'); if (first) first.focus();
+  state.rows.push(r);
+  render();
+  const tr = $('#rows').querySelector('tr[data-id="' + r.id + '"]');
+  if (tr) { tr.scrollIntoView({ block: 'nearest' }); const first = tr.querySelector('select'); if (first) first.focus(); }
 });
-function setFilter(f) {
-  state.filter = f;
-  $('#fToday').setAttribute('aria-pressed', f === 'today');
-  $('#fAll').setAttribute('aria-pressed', f === 'all');
+function syncFilterUI() {
+  $('#fromDate').value = state.from === null ? todayISO() : state.from;
+  $('#fToday').setAttribute('aria-pressed', state.from === null);
+  $('#fAll').setAttribute('aria-pressed', state.from === '');
+}
+function changeFilter(from) {
+  state.from = from;
+  state.rows.forEach((r) => { r.pinned = false; });
+  syncFilterUI();
   render();
 }
-$('#fToday').addEventListener('click', () => setFilter('today'));
-$('#fAll').addEventListener('click', () => setFilter('all'));
+$('#fToday').addEventListener('click', () => changeFilter(null));
+$('#fAll').addEventListener('click', () => changeFilter(''));
+$('#fromDate').addEventListener('change', () => {
+  const v = $('#fromDate').value;               // a cleared picker means "all dates"
+  changeFilter(v === todayISO() ? null : v);
+});
 
 /* ---------- Next session date ---------- */
 function isoOf(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
@@ -592,7 +619,7 @@ async function openReader(r, tr, btn) {
   const head = el('div', { className: 'reader-head' }, [title, el('div', { className: 'reader-actions' }, [orig, close])]);
   const hint = el('p', { className: 'reader-hint', textContent: 'Double-click a word or drag across a sentence to see its meaning or hear it in Danish.' });
   const body = el('div', { className: 'reader-body', lang: 'da', textContent: 'Loading article…' });
-  const panelTr = el('tr', { className: 'reader-row' }, [el('td', { colSpan: 5 }, [el('div', { className: 'reader' }, [head, hint, body])])]);
+  const panelTr = el('tr', { className: 'reader-row' }, [el('td', { colSpan: 6 }, [el('div', { className: 'reader' }, [head, hint, body])])]);
 
   tr.after(panelTr);
   btn.textContent = 'Hide';
@@ -742,15 +769,14 @@ async function boot() {
   $('#joinLink').href = MEETING_LINK;
   refreshDaily();
   applyMeeting('06:00', '');
+  syncFilterUI();
   render();
   if (!apiReady()) { $('#setupBanner').hidden = false; return; }
-  $('#rows').innerHTML = '<tr class="empty-row"><td class="empty" colspan="5">Loading…</td></tr>';
+  $('#rows').innerHTML = '<tr class="empty-row"><td class="empty" colspan="6">Loading…</td></tr>';
   try {
     const j = await apiGet({ action: 'init' });
     state.names = j.names || [];
-    state.rows = (j.rows || []).map((r) => Object.assign({}, r, { editing: false }))
-      .map((r, i) => Object.assign(r, { _i: i }))
-      .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b._i - a._i));
+    state.rows = (j.rows || []).map((r) => Object.assign({}, r, { editing: false }));
     applyMeeting((j.settings && j.settings.meetingTime) || '06:00', (j.settings && j.settings.meetingDate) || '');
     const sq = (j.settings && j.settings.specialQuiz) || '';
     $('#specialQuiz').value = sq;
