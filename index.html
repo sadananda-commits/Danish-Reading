@@ -17,6 +17,7 @@
     --red: #c8102e;
     --red-dark: #a40d26;
     --focus: #1b6fd1;
+    --focus-dark: #15559e;
     --ok: #1d7a4d;
     --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
     --body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
@@ -36,7 +37,7 @@
   /* ---- Today band ---- */
   .band {
     margin-top: 20px; background: var(--surface); border-radius: 14px;
-    display: grid; grid-template-columns: 1fr 1.3fr; overflow: hidden;
+    display: grid; grid-template-columns: 1.1fr 1fr; overflow: hidden;
     box-shadow: 0 1px 0 var(--line);
   }
   .band > section { padding: 28px 30px; }
@@ -55,16 +56,7 @@
   .join-row { margin-top: 20px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
   .hint { color: var(--muted); font-size: .88rem; }
 
-  h2.quiz-h { font-size: 1.9rem; font-weight: 700; color: var(--ink); letter-spacing: -0.01em; margin: 0 0 14px; }
-  .level { display: grid; grid-template-columns: 4.4rem 1fr; gap: 14px; padding: 16px 0; border-top: 1px solid var(--line); }
-  .level:last-child { padding-bottom: 0; }
-  .lvl { color: var(--muted); font-size: .9rem; font-weight: 600; padding-top: 4px; }
-  .lvl-title { font-family: var(--display); font-weight: 700; font-size: 1.15rem; margin-bottom: 10px; }
-  .lvl-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-  .lvl-row input { flex: 1 1 100px; min-width: 0; }
-  .btn.is-disabled { opacity: .5; pointer-events: none; }
-  .path { margin: 12px 0 2px; font-weight: 500; }
-  .quiz-daily { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .quiz-daily { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 22px; }
   .quiz-tag { font-family: var(--display); font-weight: 700; font-size: 2rem; letter-spacing: -0.02em; }
   .field-label { display: block; font-size: .9rem; font-weight: 600; margin-bottom: 6px; }
   .inline { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -89,22 +81,19 @@
   .btn.quiet:hover { background: #f1f5f8; }
   .btn.small { padding: 6px 12px; font-size: .9rem; }
   .btn[disabled] { opacity: .55; cursor: default; }
+  .btn.prev { background: var(--focus); }
+  .btn.prev:hover { background: var(--focus-dark); }
+  .prev-wrap { display: inline-flex; align-items: center; gap: 8px; }
+  .prev-select {
+    font: inherit; font-weight: 600; color: var(--ink); background: #fff;
+    border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px;
+  }
 
   /* ---- Articles ---- */
   .articles { margin-top: 36px; }
-  .acc-h { margin: 0; font-size: 1rem; }
-  .acc {
-    width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; cursor: pointer;
-    font: inherit; color: var(--ink); background: var(--surface); border: 0; border-radius: 14px;
-    padding: 16px 20px; box-shadow: 0 1px 0 var(--line);
-  }
-  .acc:hover { background: #f7fafc; }
-  .acc-title { font-family: var(--display); font-weight: 700; font-size: 1.3rem; }
-  .acc-count { margin-left: auto; color: var(--muted); font-size: .95rem; }
-  .chev { display: inline-block; font-size: 1.4rem; line-height: 1; transition: transform .15s; }
-  .acc[aria-expanded=true] .chev { transform: rotate(90deg); }
-  #artBody { margin-top: 12px; }
-  .tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+  .articles-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .articles-head h2 { margin: 0; font-size: 1.3rem; color: var(--ink); }
+  .tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
   .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fff; }
   .seg button { font: inherit; border: 0; background: transparent; padding: 7px 14px; cursor: pointer; color: var(--muted); }
   .seg button[aria-pressed=true] { background: var(--ink); color: #fff; }
@@ -116,16 +105,7 @@
   th { text-align: left; font-weight: 600; font-size: .88rem; color: var(--muted); padding: 12px 14px; border-bottom: 1px solid var(--line); }
   td { padding: 10px 14px; border-bottom: 1px solid #e6edf2; vertical-align: middle; }
   tr:last-child td { border-bottom: 0; }
-  td.c-no   { width: 128px; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .serial { display: flex; align-items: center; gap: 4px; }
-  .serial input {
-    font: inherit; color: var(--ink); width: 3.1rem; text-align: center; padding: 5px 4px;
-    border: 1px solid var(--line); border-radius: 8px; background: #fff; -moz-appearance: textfield; appearance: textfield;
-  }
-  .serial input::-webkit-inner-spin-button, .serial input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-  .mv { width: 26px; height: 30px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink); cursor: pointer; font-size: .95rem; line-height: 1; padding: 0; }
-  .mv:hover:not([disabled]) { background: #f1f5f8; }
-  .mv[disabled] { opacity: .35; cursor: default; }
+  td.c-no   { width: 56px; color: var(--muted); font-variant-numeric: tabular-nums; }
   td.c-date { width: 150px; white-space: nowrap; }
   td.c-name { width: 200px; }
   td.c-url  { width: 26%; }
@@ -188,7 +168,7 @@
     .band > section + section { border-left: 0; border-top: 1px solid var(--line); }
     .band > section { padding: 22px 20px; }
   }
-  @media (prefers-reduced-motion: reduce) { #toast, .chev { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
 </style>
 </head>
 <body>
@@ -219,51 +199,31 @@
     </section>
 
     <section aria-labelledby="quizTitle">
-      <h2 id="quizTitle" class="quiz-h">Daily Quiz</h2>
-
-      <div class="level">
-        <span class="lvl">Level 1</span>
-        <div class="quiz-daily">
-          <span class="quiz-tag" id="quizTag">Day 00</span>
-          <a class="btn" id="dailyQuiz" target="_blank" rel="noopener noreferrer">Open Today's Quiz</a>
+      <h2 id="quizTitle">Quiz</h2>
+      <div class="quiz-daily">
+        <span class="quiz-tag" id="quizTag">DAY00</span>
+        <a class="btn" id="dailyQuiz" target="_blank" rel="noopener noreferrer">Open today's quiz</a>
+        <div class="prev-wrap">
+          <button class="btn prev" id="prevQuizBtn" type="button" aria-expanded="false" aria-controls="prevQuizSelect">Previous quiz</button>
+          <select class="prev-select" id="prevQuizSelect" hidden aria-label="Choose a previous day's quiz">
+            <option value="">Choose a day…</option>
+          </select>
         </div>
       </div>
-
-      <div class="level">
-        <span class="lvl">Level 2</span>
-        <div>
-          <div class="lvl-title">Special Weekly Quiz</div>
-          <div class="lvl-row">
-            <a class="btn quiet is-disabled" id="specialOpen" target="_blank" rel="noopener noreferrer" aria-disabled="true">Open Special Quiz</a>
-            <input type="url" id="specialQuiz" placeholder="Paste link" aria-label="Special quiz link">
-            <button class="btn quiet" id="saveSpecial" type="button">Save</button>
-          </div>
-        </div>
+      <label class="field-label" for="specialQuiz">Special quiz link</label>
+      <div class="inline">
+        <input type="url" id="specialQuiz" placeholder="Paste a quiz link (leave blank if none)">
+        <button class="btn quiet" id="saveSpecial" type="button">Save</button>
       </div>
-
-      <div class="level">
-        <span class="lvl">Level 3</span>
-        <div>
-          <div class="lvl-title">Unlimited word quiz</div>
-          <div class="lvl-row">
-            <a class="btn quiet" id="signIn" target="_blank" rel="noopener noreferrer">Sign in here</a>
-          </div>
-          <p class="path">Then go to Question Bank › Danish</p>
-          <span class="hint">PD2 and PD3: frequently used words</span>
-        </div>
+      <div class="join-row" id="specialOpenRow" hidden>
+        <a class="btn" id="specialOpen" target="_blank" rel="noopener noreferrer">Open special quiz</a>
       </div>
     </section>
   </div>
 
-  <section class="articles">
-    <h2 class="acc-h">
-      <button class="acc" id="artToggle" type="button" aria-expanded="false" aria-controls="artBody">
-        <span class="chev" aria-hidden="true">›</span>
-        <span class="acc-title" id="artTitle">Articles</span>
-        <span class="acc-count" id="artCount"></span>
-      </button>
-    </h2>
-    <div id="artBody" hidden>
+  <section class="articles" aria-labelledby="artTitle">
+    <div class="articles-head">
+      <h2 id="artTitle">Articles</h2>
       <div class="tools">
         <div class="seg" role="group" aria-label="Show entries">
           <button type="button" id="fToday" aria-pressed="true">Today</button>
@@ -273,6 +233,7 @@
         <input type="date" id="fromDate" title="Show articles from this date onwards">
         <button class="btn" id="addRow" type="button">Add article</button>
       </div>
+    </div>
     <div class="table-scroll">
       <table>
         <thead>
@@ -280,7 +241,6 @@
         </thead>
         <tbody id="rows"></tbody>
       </table>
-    </div>
     </div>
   </section>
 </div>
@@ -303,7 +263,6 @@
 const API_URL      = 'https://script.google.com/macros/s/AKfycbwZkQ4lmTqv2avR41mqTQ6EN37n6qqJwHE3Eu-3zJhG5TmJeGjP_4cmqxgIsfFN7HG0EQ/exec';
 const MEETING_LINK = 'https://teammeet-ashy.vercel.app/meet/daily-danish-reading-club';
 const QUIZ_BASE    = 'https://bhaktivedanta.vercel.app/quiz/DAY';
-const QUIZ_SITE    = 'https://bhaktivedanta.vercel.app/';
 const MAX_WORDS    = 20;
 /* ========================================== */
 
@@ -372,17 +331,37 @@ function refreshDaily() {
   const d = new Date();
   $('#todayLabel').textContent = d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const tag = 'DAY' + pad(d.getDate());
-  $('#quizTag').textContent = 'Day ' + pad(d.getDate());
+  $('#quizTag').textContent = tag;
   $('#dailyQuiz').href = QUIZ_BASE.replace(/DAY$/, '') + tag;
+  populatePrevQuiz(d.getDate());
+}
+
+// Fills the Previous Quiz dropdown with DAY01 .. the day before today.
+// Re-run on every refreshDaily() tick, but only rebuilds the <option>
+// list when the day actually changed (so an open dropdown isn't reset
+// out from under someone mid-click).
+function populatePrevQuiz(currentDay) {
+  const prevCount = currentDay - 1;
+  const btn = $('#prevQuizBtn');
+  const sel = $('#prevQuizSelect');
+  btn.disabled = prevCount < 1;
+  if (sel.dataset.count === String(prevCount)) return;
+  sel.dataset.count = String(prevCount);
+  sel.innerHTML = '';
+  sel.append(el('option', { value: '', textContent: 'Choose a day…' }));
+  for (let day = 1; day <= prevCount; day++) {
+    const t = 'DAY' + pad(day);
+    sel.append(el('option', { value: t, textContent: t }));
+  }
 }
 setInterval(refreshDaily, 60000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshDaily(); });
 
 /* ---------- Settings ---------- */
 function showSpecial(url) {
-  const a = $('#specialOpen');
-  if (isHttp(url)) { a.href = url; a.classList.remove('is-disabled'); a.removeAttribute('aria-disabled'); }
-  else { a.removeAttribute('href'); a.classList.add('is-disabled'); a.setAttribute('aria-disabled', 'true'); }
+  const row = $('#specialOpenRow');
+  if (isHttp(url)) { $('#specialOpen').href = url; row.hidden = false; }
+  else { row.hidden = true; }
 }
 async function saveSetting(key, value, okMsg, btn) {
   if (!apiReady()) { toast('Connect the backend first (API_URL).', true); return false; }
@@ -411,6 +390,21 @@ $('#saveSpecial').addEventListener('click', async (ev) => {
   const v = $('#specialQuiz').value.trim();
   if (v && !isHttp(v)) { toast('Quiz link must start with http:// or https://', true); return; }
   if (await saveSetting('specialQuiz', v, v ? 'Special quiz saved' : 'Special quiz cleared', ev.currentTarget)) showSpecial(v);
+});
+$('#prevQuizBtn').addEventListener('click', (ev) => {
+  const sel = $('#prevQuizSelect');
+  const show = sel.hidden;
+  sel.hidden = !show;
+  ev.currentTarget.setAttribute('aria-expanded', String(show));
+  if (show) sel.focus();
+});
+$('#prevQuizSelect').addEventListener('change', (ev) => {
+  const tag = ev.currentTarget.value;
+  if (!tag) return;
+  window.open(QUIZ_BASE.replace(/DAY$/, '') + tag, '_blank', 'noopener,noreferrer');
+  ev.currentTarget.value = '';
+  ev.currentTarget.hidden = true;
+  $('#prevQuizBtn').setAttribute('aria-expanded', 'false');
 });
 
 /* ---------- Names ---------- */
@@ -442,13 +436,12 @@ function renderRow(r) {
 
   if (!r.editing) {
     tr.innerHTML =
-      '<td class="c-no"></td>' +
+      '<td class="c-no">' + (r.serial ? r.serial : '') + '</td>' +
       '<td class="c-date">' + esc(fmtDate(r.date)) + '</td>' +
       '<td class="c-name">' + esc(r.name) + '</td>' +
       '<td class="c-url">' + (isHttp(r.url) ? '<a href="' + esc(r.url) + '" target="_blank" rel="noopener noreferrer">' + esc(shortUrl(r.url)) + '</a>' : esc(r.url)) + '</td>' +
       '<td>' + (r.headline ? esc(r.headline) : '<span class="muted">No headline</span>') + '</td>' +
       '<td class="c-act"></td>';
-    tr.querySelector('.c-no').append(serialControls(r));
     const edit = el('button', { className: 'btn quiet small', type: 'button', textContent: 'Edit' });
     edit.addEventListener('click', () => {
       if (reader && reader.id === r.id) closeReader();
@@ -569,44 +562,6 @@ function renderRow(r) {
   return tr;
 }
 
-/* ---------- Serial number: edit it, or move the row up / down ---------- */
-let moving = false;
-function serialControls(r) {
-  const known = state.rows.filter((x) => x.date === r.date && x.serial);
-  const last = known.length ? Math.max.apply(null, known.map((x) => x.serial)) : 0;
-  const up = el('button', { className: 'mv', type: 'button', textContent: '↑', title: 'Move up', ariaLabel: 'Move up' });
-  const down = el('button', { className: 'mv', type: 'button', textContent: '↓', title: 'Move down', ariaLabel: 'Move down' });
-  const inp = el('input', { type: 'number', min: 1, value: r.serial || '', ariaLabel: 'Serial number' });
-  up.disabled = !r.serial || r.serial <= 1;
-  down.disabled = !r.serial || r.serial >= last;
-  up.addEventListener('click', () => moveRow(r, { dir: -1 }));
-  down.addEventListener('click', () => moveRow(r, { dir: 1 }));
-  inp.addEventListener('change', () => {
-    const v = parseInt(inp.value, 10);
-    if (!v || v < 1 || v === r.serial) { inp.value = r.serial || ''; return; }
-    moveRow(r, { to: v });
-  });
-  inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') inp.blur(); });
-  return el('div', { className: 'serial' }, [up, inp, down]);
-}
-async function moveRow(r, opts) {
-  if (moving) return;
-  if (!apiReady()) { toast('Connect the backend first (API_URL).', true); render(); return; }
-  moving = true;
-  try {
-    const j = await apiPost(Object.assign({ action: 'moveRow', id: r.id }, opts));
-    (j.rows || []).forEach((s) => {
-      const o = state.rows.find((x) => x.id === s.id);
-      if (o) o.serial = s.serial;
-      else state.rows.push(Object.assign({}, s, { editing: false })); // added by someone else meanwhile
-    });
-    render();
-  } catch (e) {
-    toast(e.message, true);
-    render(); // resets the number box
-  } finally { moving = false; }
-}
-
 function shortUrl(u) {
   try { const x = new URL(u); return x.hostname.replace(/^www\./, '') + (x.pathname.length > 1 ? x.pathname : ''); }
   catch (e) { return u; }
@@ -629,18 +584,6 @@ function render() {
     else { reader = null; hidePop(); stopSpeech(); }
   }
   updateEmpty();
-  updateCount();
-}
-function setArticlesOpen(open) {
-  $('#artBody').hidden = !open;
-  $('#artToggle').setAttribute('aria-expanded', open ? 'true' : 'false');
-}
-$('#artToggle').addEventListener('click', () => setArticlesOpen($('#artBody').hidden));
-function updateCount() {
-  if (!state.loaded) { $('#artCount').textContent = ''; return; }
-  const today = todayISO();
-  const n = state.rows.filter((r) => r.date === today && !r.isNew).length;
-  $('#artCount').textContent = n === 1 ? '1 article today' : n + ' articles today';
 }
 function updateEmpty() {
   const tbody = $('#rows');
@@ -873,7 +816,6 @@ async function speak(text, btn) {
 /* ---------- Boot ---------- */
 async function boot() {
   $('#joinLink').href = MEETING_LINK;
-  $('#signIn').href = QUIZ_SITE;
   refreshDaily();
   applyMeeting('06:00', '');
   syncFilterUI();
@@ -884,7 +826,6 @@ async function boot() {
     const j = await apiGet({ action: 'init' });
     state.names = j.names || [];
     state.rows = (j.rows || []).map((r) => Object.assign({}, r, { editing: false }));
-    state.loaded = true;
     applyMeeting((j.settings && j.settings.meetingTime) || '06:00', (j.settings && j.settings.meetingDate) || '');
     const sq = (j.settings && j.settings.specialQuiz) || '';
     $('#specialQuiz').value = sq;
